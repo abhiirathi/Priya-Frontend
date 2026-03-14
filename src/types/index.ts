@@ -151,12 +151,14 @@ export interface RunInfo {
   started_at: string;
 }
 
-// WebSocket Event (generic)
+// WebSocket Event (generic) - supports both wrapped {type, payload:{...}} and flat {type, field1, ...} formats
 export interface WSEvent {
   type: string;
-  payload: Record<string, any>;
+  payload?: Record<string, any>;
   run_id: string;
-  timestamp: string;
+  timestamp?: string;
+  ts?: string;
+  [key: string]: any;
 }
 
 // Raw Log Entry

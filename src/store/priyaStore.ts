@@ -117,15 +117,18 @@ export const usePriyaStore = create<PriyaStore>((set, get) => ({
     }),
 
   addRawEvent: (event) =>
-    set((state) => ({
-      rawEvents: [
-        ...state.rawEvents,
-        {
-          timestamp: new Date().toLocaleTimeString(),
-          event,
-        },
-      ],
-    })),
+    set((state) => {
+      const ts = event.timestamp || event.ts || new Date().toISOString();
+      return {
+        rawEvents: [
+          ...state.rawEvents,
+          {
+            timestamp: new Date(ts).toLocaleTimeString(),
+            event,
+          },
+        ],
+      };
+    }),
 
   toggleLogsExpanded: () =>
     set((state) => ({
@@ -139,56 +142,65 @@ export const usePriyaStore = create<PriyaStore>((set, get) => ({
     // Always log raw event
     get().addRawEvent(event);
 
+    // Helper: resolve field from payload-wrapped or flat event
+    const f = (field: string) => event.payload?.[field] ?? event[field];
+    const ts = event.timestamp || event.ts || new Date().toISOString();
+
     switch (event.type) {
-      case 'CANVAS_STATE':
-        set({ canvasState: event.payload.state });
+      case 'CANVAS_STATE': {
+        const state = f('state');
+        if (state) set({ canvasState: state });
         break;
+      }
 
       case 'AGENT_NARRATION':
         get().addChatMessage({
-          timestamp: new Date(event.timestamp).toLocaleTimeString(),
-          text: event.payload.text,
-          level: event.payload.level,
+          timestamp: new Date(ts).toLocaleTimeString(),
+          text: f('text'),
+          level: f('level'),
         });
         break;
 
       case 'PIPELINE_STEP':
         get().updatePipelineDot({
-          vendor_id: event.payload.vendor_id,
-          stage: event.payload.stage,
-          status: mapStatusToDotStatus(event.payload.status),
+          vendor_id: f('vendor_id'),
+          stage: f('stage'),
+          status: mapStatusToDotStatus(f('status')),
         });
         break;
 
       case 'VENDOR_STATE':
         get().upsertVendor({
-          vendor_id: event.payload.vendor_id,
-          name: event.payload.name,
-          amount: event.payload.amount,
-          rail: event.payload.rail,
-          state: event.payload.state,
-          pine_order_id: event.payload.pine_order_id,
-          attempt_number: event.payload.attempt_number,
+          vendor_id: f('vendor_id'),
+          name: f('name'),
+          amount: f('amount'),
+          rail: f('rail'),
+          state: f('state'),
+          pine_order_id: f('pine_order_id'),
+          attempt_number: f('attempt_number'),
         });
         break;
 
-      case 'POLICY_GATE':
+      case 'POLICY_GATE': {
+        const gateData = event.payload ?? event;
         set({
-          policyGateData: event.payload as PolicyGateData,
+          policyGateData: gateData as PolicyGateData,
           agentStatus: 'awaiting_approval',
         });
         break;
+      }
 
       case 'ESCALATION':
         {
-          const vendor = get().getVendor(event.payload.vendor_id);
+          const vendorId = f('vendor_id');
+          const vendor = get().getVendor(vendorId);
           if (vendor) {
             get().upsertVendor({
               ...vendor,
               escalation: {
-                flag_type: event.payload.flag_type,
-                action_required: event.payload.action_required,
-                details: event.payload.details,
+                flag_type: f('flag_type'),
+                action_required: f('action_required'),
+                details: f('details'),
               },
             });
           }
@@ -198,18 +210,19 @@ export const usePriyaStore = create<PriyaStore>((set, get) => ({
 
       case 'RAIL_SWITCH':
         {
-          const vendor = get().getVendor(event.payload.vendor_id);
+          const vendorId = f('vendor_id');
+          const vendor = get().getVendor(vendorId);
           if (vendor) {
             const history = vendor.rail_history || [];
             get().upsertVendor({
               ...vendor,
-              rail: event.payload.to_rail,
+              rail: f('to_rail'),
               rail_history: [
                 ...history,
                 {
-                  from_rail: event.payload.from_rail,
-                  to_rail: event.payload.to_rail,
-                  reason: event.payload.reason,
+                  from_rail: f('from_rail'),
+                  to_rail: f('to_rail'),
+                  reason: f('reason'),
                 },
               ],
             });
@@ -217,16 +230,21 @@ export const usePriyaStore = create<PriyaStore>((set, get) => ({
         }
         break;
 
-      case 'RUN_SUMMARY':
+      case 'RUN_SUMMARY': {
+        const summaryData = event.payload ?? event;
+        const failed = f('failed');
         set({
-          runSummary: event.payload as RunSummary,
-          agentStatus: event.payload.failed > 0 ? 'partial' : 'complete',
+          runSummary: summaryData as RunSummary,
+          agentStatus: failed > 0 ? 'partial' : 'complete',
         });
         break;
+      }
 
-      case 'QUERY_RESULT':
-        set({ queryResult: event.payload as QueryResult });
+      case 'QUERY_RESULT': {
+        const queryData = event.payload ?? event;
+        set({ queryResult: queryData as QueryResult });
         break;
+      }
     }
   },
 
