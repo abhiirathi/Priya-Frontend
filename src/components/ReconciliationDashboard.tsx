@@ -1,4 +1,4 @@
-import { useRef, useEffect } from 'react';
+import { useRef, useEffect, useState } from 'react';
 import type { ReconciliationRow, DashboardMetrics } from '../types';
 
 type ReconciliationDashboardProps = {
@@ -14,6 +14,8 @@ type ReconciliationDashboardProps = {
   onPromptSubmit: () => void;
   promptHistory: Array<{ prompt: string; summary: string; timestamp: string }>;
   promptError: string;
+  onStatusSelect?: (status: 'reconciled' | 'unreconciled' | 'high-risk' | 'delayed') => void;
+  selectedStatus?: 'reconciled' | 'unreconciled' | 'high-risk' | 'delayed' | undefined;
 };
 
 function formatCurrency(value: number) {
@@ -42,15 +44,22 @@ export function ReconciliationDashboard({
   onPromptChange,
   onPromptSubmit,
   promptHistory,
-  promptError
+  promptError,
+  onStatusSelect,
+  selectedStatus
 }: ReconciliationDashboardProps) {
   const historyRef = useRef<HTMLDivElement | null>(null);
+  const [selectedRowId, setSelectedRowId] = useState<string | null>(null);
 
   useEffect(() => {
     if (historyRef.current) {
       historyRef.current.scrollTop = historyRef.current.scrollHeight;
     }
   }, [promptHistory]);
+
+  const handleRowClick = (orderId: string) => {
+    setSelectedRowId(selectedRowId === orderId ? null : orderId);
+  };
 
   return (
     <div className="dashboard-container">
@@ -91,7 +100,10 @@ export function ReconciliationDashboard({
 
           {/* Status Summary */}
           <div className="status-summary">
-            <div className="status-item">
+            <div
+              className={`status-item ${selectedStatus === 'reconciled' ? 'active' : ''}`}
+              onClick={() => onStatusSelect?.('reconciled')}
+            >
               <div className="status-item__dot status-item__dot--reconciled"></div>
               <div className="status-item__info">
                 <div className="status-item__label">Reconciled</div>
@@ -99,7 +111,10 @@ export function ReconciliationDashboard({
               </div>
             </div>
 
-            <div className="status-item">
+            <div
+              className={`status-item ${selectedStatus === 'unreconciled' ? 'active' : ''}`}
+              onClick={() => onStatusSelect?.('unreconciled')}
+            >
               <div className="status-item__dot status-item__dot--unreconciled"></div>
               <div className="status-item__info">
                 <div className="status-item__label">Unreconciled</div>
@@ -107,7 +122,10 @@ export function ReconciliationDashboard({
               </div>
             </div>
 
-            <div className="status-item">
+            <div
+              className={`status-item ${selectedStatus === 'delayed' ? 'active' : ''}`}
+              onClick={() => onStatusSelect?.('delayed')}
+            >
               <div className="status-item__dot status-item__dot--delayed"></div>
               <div className="status-item__info">
                 <div className="status-item__label">Delayed</div>
@@ -115,7 +133,10 @@ export function ReconciliationDashboard({
               </div>
             </div>
 
-            <div className="status-item">
+            <div
+              className={`status-item ${selectedStatus === 'high-risk' ? 'active' : ''}`}
+              onClick={() => onStatusSelect?.('high-risk')}
+            >
               <div className="status-item__dot status-item__dot--high-risk"></div>
               <div className="status-item__info">
                 <div className="status-item__label">High-Risk</div>
@@ -157,7 +178,11 @@ export function ReconciliationDashboard({
         <div className="exceptions-grid">
           {paginatedExceptions.length > 0 ? (
             paginatedExceptions.map((row) => (
-              <div key={row.orderId} className={`exception-card exception-card--${row.status}`}>
+              <div
+                key={row.orderId}
+                className={`exception-card exception-card--${row.status} ${selectedRowId === row.orderId ? 'exception-card--selected' : ''}`}
+                onClick={() => handleRowClick(row.orderId)}
+              >
                 <div className="exception-card__status">
                   <div className={`exception-card__status-dot exception-card__status-dot--${row.status}`}></div>
                   <span className="exception-card__status-label">{row.status}</span>

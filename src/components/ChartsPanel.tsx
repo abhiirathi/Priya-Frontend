@@ -141,9 +141,9 @@ export function ChartsPanel({ metrics, rows, onStatusSelect, onHospitalSelect, o
         <div className="chart-header">
           <h3 className="chart-title">
             <span className="chart-icon">🏥</span>
-            Hospital Risk Profile
+            Risk Profile
           </h3>
-          <p className="chart-description">Unresolved transactions per hospital. Click to filter and investigate.</p>
+          <p className="chart-description">Unresolved transactions. Click to filter and investigate.</p>
         </div>
         <div className="chart-container">
           <div className="hospital-risk-list">

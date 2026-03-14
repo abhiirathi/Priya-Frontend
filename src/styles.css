@@ -72,10 +72,31 @@ input {
 }
 
 .app-shell {
+  width: 100%;
+  margin: 0 auto;
+  padding: 0;
+  animation: fadeIn 0.5s ease-out;
+}
+
+.tab-content-wrapper {
   width: min(1400px, calc(100vw - 32px));
   margin: 0 auto;
-  padding: 40px 0 60px;
+  padding: 40px 16px 60px;
   animation: fadeIn 0.5s ease-out;
+}
+
+.tab-placeholder {
+  background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 60px 40px;
+  text-align: center;
+  color: #94a3b8;
+}
+
+.tab-placeholder h2 {
+  color: #0f172a;
+  margin-bottom: 16px;
 }
 
 .hero,

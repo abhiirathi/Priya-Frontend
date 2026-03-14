@@ -5,6 +5,10 @@ import { FileDrop } from './components/FileDrop';
 import { ReconciliationDashboard } from './components/ReconciliationDashboard';
 import { AnimatedBackground } from './components/AnimatedBackground';
 import { TypingAnimation } from './components/TypingAnimation';
+import { TabNavigation } from './components/TabNavigation';
+import { OrdersTab } from './components/OrdersTab';
+import { PaymentsTab } from './components/PaymentsTab';
+import { SettlementTab } from './components/SettlementTab';
 import { buildMetrics, reconcileTransactions } from './lib/reconcile';
 import type { BankTransaction, PineLabsTransaction, ReconciliationRow } from './types';
 
@@ -21,7 +25,7 @@ type PromptEntry = {
 };
 
 type DashboardFilter = {
-  status?: 'reconciled' | 'unreconciled' | 'high-risk';
+  status?: 'reconciled' | 'unreconciled' | 'high-risk' | 'delayed';
   hospital?: string;
   rail?: string;
 };
@@ -71,6 +75,8 @@ function applyPrompt(rows: ReconciliationRow[], prompt: string) {
 
 export default function App() {
   const PAGE_SIZE = 5;
+  const [activeTab, setActiveTab] = useState<'orders' | 'payments' | 'settlement' | 'reconciliation'>('orders');
+  const [selectedVendorsForPayment, setSelectedVendorsForPayment] = useState<string[]>([]);
   const [pineLabsRows, setPineLabsRows] = useState<PineLabsTransaction[]>([]);
   const [bankRows, setBankRows] = useState<BankTransaction[]>([]);
   const [results, setResults] = useState<ReconciliationRow[]>([]);
@@ -206,7 +212,7 @@ export default function App() {
     setCurrentPage(1);
   };
 
-  const toggleStatusFilter = (status: 'reconciled' | 'unreconciled' | 'high-risk') => {
+  const toggleStatusFilter = (status: 'reconciled' | 'unreconciled' | 'high-risk' | 'delayed') => {
     setDashboardFilter((current) => ({
       ...current,
       status: current.status === status ? undefined : status
@@ -236,6 +242,14 @@ export default function App() {
     setPrompt('');
     setPromptError('');
     setCurrentPage(1);
+  };
+
+  const handleGeneratePaymentLinks = (vendorNames: string[]) => {
+    setSelectedVendorsForPayment(vendorNames);
+    // Transition to payments tab with animation
+    setTimeout(() => {
+      setActiveTab('payments');
+    }, 300);
   };
 
   useEffect(() => {
@@ -345,27 +359,61 @@ export default function App() {
         </>
       ) : (
         <>
-          <ReconciliationDashboard
-            metrics={metrics}
-            visibleRows={visibleRows}
-            paginatedExceptions={paginatedExceptions}
-            currentPage={currentPage}
-            totalPages={totalPages}
-            onPageChange={setCurrentPage}
-            onReset={resetDashboardView}
-            prompt={prompt}
-            onPromptChange={setPrompt}
-            onPromptSubmit={handlePromptSubmit}
-            promptHistory={promptHistory}
-            promptError={promptError}
-          />
-          <ChartsPanel
-            metrics={metrics}
-            rows={visibleRows}
-            onStatusSelect={toggleStatusFilter}
-            onHospitalSelect={toggleHospitalFilter}
-            onRailSelect={toggleRailFilter}
-          />
+          {/* Tab Navigation */}
+          <TabNavigation activeTab={activeTab} onTabChange={setActiveTab} />
+
+          {/* Tab Content Container */}
+          <div className="tab-content-wrapper">
+            {/* Orders Tab */}
+            {activeTab === 'orders' && (
+              <OrdersTab
+                invoices={[]}
+                onGeneratePaymentLinks={handleGeneratePaymentLinks}
+              />
+            )}
+
+            {/* Payments Tab */}
+            {activeTab === 'payments' && (
+              <PaymentsTab
+                vendorNames={selectedVendorsForPayment}
+                vendorAmounts={{}}
+              />
+            )}
+
+            {/* Settlement Tab */}
+            {activeTab === 'settlement' && (
+              <SettlementTab selectedVendors={selectedVendorsForPayment} />
+            )}
+
+            {/* Reconciliation Tab */}
+            {activeTab === 'reconciliation' && (
+              <>
+                <ReconciliationDashboard
+                  metrics={metrics}
+                  visibleRows={visibleRows}
+                  paginatedExceptions={paginatedExceptions}
+                  currentPage={currentPage}
+                  totalPages={totalPages}
+                  onPageChange={setCurrentPage}
+                  onReset={resetDashboardView}
+                  prompt={prompt}
+                  onPromptChange={setPrompt}
+                  onPromptSubmit={handlePromptSubmit}
+                  promptHistory={promptHistory}
+                  promptError={promptError}
+                  onStatusSelect={toggleStatusFilter}
+                  selectedStatus={dashboardFilter.status}
+                />
+                <ChartsPanel
+                  metrics={metrics}
+                  rows={visibleRows}
+                  onStatusSelect={toggleStatusFilter}
+                  onHospitalSelect={toggleHospitalFilter}
+                  onRailSelect={toggleRailFilter}
+                />
+              </>
+            )}
+          </div>
         </>
       )}
     </div>

@@ -4,6 +4,7 @@ import App from './App';
 import './styles.css';
 import './styles-dashboard.css';
 import './styles-charts.css';
+import './styles-tabs.css';
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
