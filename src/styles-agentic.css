@@ -63,27 +63,37 @@ html, body {
 .agentic-logo {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 10px;
 }
 
 .agentic-logo__icon {
-  width: 32px;
-  height: 32px;
-  border-radius: 6px;
-  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 50%, #a78bfa 100%);
   display: flex;
   align-items: center;
   justify-content: center;
-  font-weight: 700;
+  font-weight: 800;
   color: white;
-  font-size: 16px;
+  font-size: 18px;
+  box-shadow: 0 0 16px rgba(99, 102, 241, 0.5), 0 0 32px rgba(139, 92, 246, 0.2);
+  animation: logoPulse 3s ease-in-out infinite;
+}
+
+@keyframes logoPulse {
+  0%, 100% { box-shadow: 0 0 16px rgba(99, 102, 241, 0.5), 0 0 32px rgba(139, 92, 246, 0.2); }
+  50% { box-shadow: 0 0 24px rgba(99, 102, 241, 0.7), 0 0 48px rgba(139, 92, 246, 0.35); }
 }
 
 .agentic-logo__text {
-  font-size: 16px;
-  font-weight: 700;
-  color: #10b981;
-  letter-spacing: 1px;
+  font-size: 18px;
+  font-weight: 800;
+  background: linear-gradient(135deg, #a78bfa, #818cf8, #6366f1);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  letter-spacing: 2px;
 }
 
 .agentic-topbar__center {
@@ -109,6 +119,46 @@ html, body {
   font-weight: 600;
   color: #60a5fa;
   text-transform: uppercase;
+}
+
+.agentic-persona-select {
+  padding: 6px 28px 6px 12px;
+  background: rgba(99, 102, 241, 0.12);
+  border: 1px solid rgba(99, 102, 241, 0.35);
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 700;
+  color: #a78bfa;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  cursor: pointer;
+  appearance: none;
+  -webkit-appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath d='M3 5l3 3 3-3' fill='none' stroke='%23a78bfa' stroke-width='1.5'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 8px center;
+  transition: all 0.2s ease;
+}
+
+.agentic-persona-select:hover {
+  background: rgba(99, 102, 241, 0.2);
+  border-color: rgba(99, 102, 241, 0.5);
+}
+
+.agentic-persona-select:focus {
+  outline: none;
+  border-color: #6366f1;
+  box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.2);
+}
+
+.agentic-persona-select:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.agentic-persona-select option {
+  background: #1a1f3a;
+  color: #e2e8f0;
 }
 
 .agentic-run-id {
@@ -565,6 +615,11 @@ html, body {
     opacity: 1;
     transform: translateY(0);
   }
+}
+
+@keyframes breathe {
+  0%, 100% { opacity: 0.25; transform: scale(1); }
+  50% { opacity: 0.6; transform: scale(1.8); }
 }
 
 .agentic-chat-message__time {

@@ -53,13 +53,61 @@ export type DashboardMetrics = {
   totalBankVolume: number;
 };
 
+// ======================== PRIYA Reconciliation Types ========================
+
+export interface ReconCheck {
+  check_id: number;
+  name: string;
+  severity: 'blocking' | 'warning' | 'info';
+  passed: boolean;
+  detail: string;
+}
+
+export interface ReconRow {
+  id: string;
+  run_id: string;
+  vendor_id: string;
+  vendor_name: string;
+  pine_order_id: string;
+  utr_number: string | null;
+  invoice_amount: number;
+  paid_amount: number;
+  settled_amount: number;
+  bank_credit_amount: number | null;
+  bank_delta: number | null;
+  variance: number;
+  platform_fee: number;
+  mdr_rate_actual: number;
+  mdr_rate_contracted: number;
+  mdr_drift_flagged: boolean;
+  rail_used: string;
+  retries: number;
+  outcome: string;
+  recon_status: 'MATCHED' | 'MISMATCH' | 'WARNING' | 'PENDING';
+  checks: ReconCheck[];
+  settlement_delay_days: number;
+  settled_at: string | null;
+  created_at: string;
+}
+
+export interface ReconScorecard {
+  total_settlements: number;
+  total_amount: number;
+  match_rate: number;
+  mismatch_count: number;
+  mdr_drift_count: number;
+  delayed_count: number;
+  pending_bank_count: number;
+  refund_pending: number;
+}
+
 // ======================== PRIYA Backend Types ========================
 
 // Personas
 export type Persona = 'hospital' | 'kirana';
 
 // Canvas States
-export type CanvasState = 'workflow' | 'policy_gate' | 'run_board' | 'audit' | 'query_result';
+export type CanvasState = 'workflow' | 'policy_gate' | 'run_board' | 'audit' | 'query_result' | 'awaiting_payment';
 
 // Agent Status
 export type AgentStatus = 'idle' | 'running' | 'awaiting_approval' | 'escalation' | 'complete' | 'partial';
@@ -78,6 +126,7 @@ export interface VendorRow {
   rail: PaymentRail;
   state: VendorState;
   pine_order_id?: string;
+  payment_link?: string;
   attempt_number: number;
   escalation?: {
     flag_type: string;
@@ -115,6 +164,10 @@ export interface PolicyGateData {
     priority_reason: string;
     action: 'pay' | 'defer' | 'escalate' | 'queue';
     priority_score: number;
+    items?: number;
+    invoice_number?: string;
+    due_date?: string;
+    drug_schedule?: string;
   }>;
   total: number;
 }
@@ -126,7 +179,7 @@ export interface QueryResult {
   columns: string[];
   rows: any[][];
   row_count: number;
-  render_as: 'table' | 'bar_chart' | 'summary_card';
+  render_as: 'table' | 'bar_chart' | 'pie_chart' | 'line_chart' | 'summary_card';
 }
 
 // Run Summary

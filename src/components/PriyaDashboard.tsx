@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { usePriyaApi } from '../hooks/usePriyaApi';
 import { useWebSocket } from '../hooks/useWebSocket';
 import { usePriyaStore } from '../store/priyaStore';
+import { ReconciliationDashboard } from './ReconciliationDashboard';
 import type { Persona, WSEvent } from '../types';
 
 export function PriyaDashboard() {
@@ -147,7 +148,10 @@ export function PriyaDashboard() {
           )}
 
           {store.canvasState === 'audit' && store.runSummary && (
-            <AuditPanel summary={store.runSummary} onExport={handleExport} disabled={isLoading} />
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', width: '100%' }}>
+              <AuditPanel summary={store.runSummary} onExport={handleExport} disabled={isLoading} />
+              <ReconciliationDashboard runId={store.runId ?? undefined} mode="run" />
+            </div>
           )}
 
           {store.canvasState === 'query_result' && store.queryResult && (

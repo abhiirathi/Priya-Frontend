@@ -67,14 +67,14 @@ export function ChartsPanel({ metrics, rows, onStatusSelect, onHospitalSelect, o
       return (
         <div
           style={{
-            background: '#ffffff',
+            background: '#1a1d24',
             padding: '12px 16px',
-            border: '1px solid #e2e8f0',
+            border: '1px solid rgba(255,255,255,0.1)',
             borderRadius: '8px',
-            boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)'
+            boxShadow: '0 4px 12px rgba(0, 0, 0, 0.4)'
           }}
         >
-          <p style={{ margin: 0, fontSize: '0.85rem', fontWeight: 600, color: '#0f172a' }}>
+          <p style={{ margin: 0, fontSize: '0.85rem', fontWeight: 600, color: 'rgba(255,255,255,0.9)' }}>
             {payload[0].payload.date || payload[0].payload.name || payload[0].payload.hospital || payload[0].name}
           </p>
           {payload.map((entry: any, index: number) => (
@@ -191,11 +191,11 @@ export function ChartsPanel({ metrics, rows, onStatusSelect, onHospitalSelect, o
                   <stop offset="95%" stopColor="#10b981" stopOpacity={0.1} />
                 </linearGradient>
               </defs>
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="date" />
-              <YAxis />
+              <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.06)" />
+              <XAxis dataKey="date" tick={{ fill: 'rgba(255,255,255,0.5)', fontSize: 12 }} stroke="rgba(255,255,255,0.1)" />
+              <YAxis tick={{ fill: 'rgba(255,255,255,0.5)', fontSize: 12 }} stroke="rgba(255,255,255,0.1)" />
               <Tooltip content={<CustomTooltip />} />
-              <Legend wrapperStyle={{ paddingTop: '20px' }} />
+              <Legend wrapperStyle={{ paddingTop: '20px', color: 'rgba(255,255,255,0.7)' }} />
               <Area
                 type="monotone"
                 dataKey="pineLabs"
@@ -243,9 +243,9 @@ export function ChartsPanel({ metrics, rows, onStatusSelect, onHospitalSelect, o
         <div className="chart-container bar-chart-wrapper">
           <ResponsiveContainer width="100%" height={240}>
             <BarChart data={railData} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="rail" />
-              <YAxis />
+              <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.06)" />
+              <XAxis dataKey="rail" tick={{ fill: 'rgba(255,255,255,0.5)', fontSize: 12 }} stroke="rgba(255,255,255,0.1)" />
+              <YAxis tick={{ fill: 'rgba(255,255,255,0.5)', fontSize: 12 }} stroke="rgba(255,255,255,0.1)" />
               <Tooltip content={<CustomTooltip />} />
               <Bar dataKey="count" fill="#3b82f6" radius={[8, 8, 0, 0]} onClick={(state) => {
                 const payload = state?.activePayload?.[0]?.payload as { rail?: string } | undefined;
@@ -278,9 +278,9 @@ export function ChartsPanel({ metrics, rows, onStatusSelect, onHospitalSelect, o
                 .map((row) => ({ orderId: row.orderId, variancePercent: row.variancePercent }))}
               margin={{ top: 10, right: 30, left: 0, bottom: 0 }}
             >
-              <CartesianGrid strokeDasharray="3 3" />
+              <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.06)" />
               <XAxis dataKey="orderId" />
-              <YAxis />
+              <YAxis tick={{ fill: 'rgba(255,255,255,0.5)', fontSize: 12 }} stroke="rgba(255,255,255,0.1)" />
               <Tooltip content={<CustomTooltip />} />
               <Line
                 type="monotone"

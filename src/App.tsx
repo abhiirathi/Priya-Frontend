@@ -1,6 +1,5 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
 import Papa from 'papaparse';
-import { ChartsPanel } from './components/ChartsPanel';
 import { FileDrop } from './components/FileDrop';
 import { ReconciliationDashboard } from './components/ReconciliationDashboard';
 import { AnimatedBackground } from './components/AnimatedBackground';
@@ -9,8 +8,8 @@ import { TabNavigation } from './components/TabNavigation';
 import { OrdersTab } from './components/OrdersTab';
 import { PaymentsTab } from './components/PaymentsTab';
 import { SettlementTab } from './components/SettlementTab';
-import { buildMetrics, reconcileTransactions } from './lib/reconcile';
-import type { BankTransaction, PineLabsTransaction, ReconciliationRow } from './types';
+import { reconcileTransactions } from './lib/reconcile';
+import type { BankTransaction, PineLabsTransaction } from './types';
 
 async function parseCsvFile<T>(file: File): Promise<T[]> {
   const text = await file.text();
@@ -18,40 +17,26 @@ async function parseCsvFile<T>(file: File): Promise<T[]> {
   return parsed.data;
 }
 
-type DashboardFilter = {
-  status?: 'reconciled' | 'unreconciled' | 'high-risk' | 'delayed';
-  hospital?: string;
-  rail?: string;
-};
-
-
 export default function App() {
-  const PAGE_SIZE = 5;
   const [activeTab, setActiveTab] = useState<'orders' | 'payments' | 'settlement' | 'reconciliation'>('orders');
   const [selectedVendorsForPayment, setSelectedVendorsForPayment] = useState<string[]>([]);
   const [pineLabsRows, setPineLabsRows] = useState<PineLabsTransaction[]>([]);
   const [bankRows, setBankRows] = useState<BankTransaction[]>([]);
-  const [results, setResults] = useState<ReconciliationRow[]>([]);
-  const [promptRows, setPromptRows] = useState<ReconciliationRow[]>([]);
   const [hasReconciled, setHasReconciled] = useState(false);
   const [error, setError] = useState('');
   const [pineLabsFileName, setPineLabsFileName] = useState('');
   const [bankFileName, setBankFileName] = useState('');
-  const [currentPage, setCurrentPage] = useState(1);
-  const [dashboardFilter, setDashboardFilter] = useState<DashboardFilter>({});
 
   // Auto-load sample datasets on component mount
   useEffect(() => {
     const loadSampleData = async () => {
       try {
-        // Load Pine Labs data
         const plResponse = await fetch('/datasets/pine_labs_hospital_payments.csv');
         const plText = await plResponse.text();
         const plParsed = Papa.parse<PineLabsTransaction>(plText, { header: true, dynamicTyping: true, skipEmptyLines: true });
         setPineLabsRows(plParsed.data);
         setPineLabsFileName('pine_labs_hospital_payments.csv');
 
-        // Load Bank data
         const bankResponse = await fetch('/datasets/hospital_bank_statement.csv');
         const bankText = await bankResponse.text();
         const bankParsed = Papa.parse<BankTransaction>(bankText, { header: true, dynamicTyping: true, skipEmptyLines: true });
@@ -65,17 +50,6 @@ export default function App() {
     loadSampleData();
   }, []);
 
-  const visibleRows = useMemo(() => {
-    return promptRows.filter((row) => {
-      if (dashboardFilter.status && row.status !== dashboardFilter.status) return false;
-      if (dashboardFilter.hospital && row.hospitalName !== dashboardFilter.hospital) return false;
-      if (dashboardFilter.rail && row.rail !== dashboardFilter.rail) return false;
-      return true;
-    });
-  }, [promptRows, dashboardFilter]);
-
-  const metrics = buildMetrics(visibleRows);
-
   const handleReconcile = () => {
     if (pineLabsRows.length === 0 && bankRows.length === 0) {
       setError('Upload at least one dataset to run reconciliation.');
@@ -83,15 +57,10 @@ export default function App() {
     }
 
     setError('');
-    // Use whichever dataset is available, or both if both are available
-    const usePineLabs = pineLabsRows.length > 0 ? pineLabsRows : [];
-    const useBank = bankRows.length > 0 ? bankRows : [];
-
-    const nextResults = reconcileTransactions(usePineLabs, useBank);
-    setResults(nextResults);
-    setPromptRows(nextResults);
-    setDashboardFilter({});
-    setCurrentPage(1);
+    reconcileTransactions(
+      pineLabsRows.length > 0 ? pineLabsRows : [],
+      bankRows.length > 0 ? bankRows : []
+    );
     setHasReconciled(true);
   };
 
@@ -115,65 +84,20 @@ export default function App() {
     setPineLabsRows([]);
     setPineLabsFileName('');
     setHasReconciled(false);
-    setResults([]);
-    setPromptRows([]);
-    setDashboardFilter({});
-    setCurrentPage(1);
   };
 
   const clearBankUpload = () => {
     setBankRows([]);
     setBankFileName('');
     setHasReconciled(false);
-    setResults([]);
-    setPromptRows([]);
-    setDashboardFilter({});
-    setCurrentPage(1);
-  };
-
-  const exceptions = visibleRows.filter((row) => row.status !== 'reconciled');
-  const totalPages = Math.max(1, Math.ceil(exceptions.length / PAGE_SIZE));
-  const paginatedExceptions = exceptions.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE);
-
-
-  const toggleStatusFilter = (status: 'reconciled' | 'unreconciled' | 'high-risk' | 'delayed') => {
-    setDashboardFilter((current) => ({
-      ...current,
-      status: current.status === status ? undefined : status
-    }));
-    setCurrentPage(1);
-  };
-
-  const toggleHospitalFilter = (hospital: string) => {
-    setDashboardFilter((current) => ({
-      ...current,
-      hospital: current.hospital === hospital ? undefined : hospital
-    }));
-    setCurrentPage(1);
-  };
-
-  const toggleRailFilter = (rail: string) => {
-    setDashboardFilter((current) => ({
-      ...current,
-      rail: current.rail === rail ? undefined : rail
-    }));
-    setCurrentPage(1);
-  };
-
-  const resetDashboardView = () => {
-    setPromptRows(results);
-    setDashboardFilter({});
-    setCurrentPage(1);
   };
 
   const handleGeneratePaymentLinks = (vendorNames: string[]) => {
     setSelectedVendorsForPayment(vendorNames);
-    // Transition to payments tab with animation
     setTimeout(() => {
       setActiveTab('payments');
     }, 300);
   };
-
 
   return (
     <div className="app-shell">
@@ -282,7 +206,6 @@ export default function App() {
 
           {/* Tab Content Container */}
           <div className="tab-content-wrapper">
-            {/* Orders Tab */}
             {activeTab === 'orders' && (
               <OrdersTab
                 invoices={[]}
@@ -290,7 +213,6 @@ export default function App() {
               />
             )}
 
-            {/* Payments Tab */}
             {activeTab === 'payments' && (
               <PaymentsTab
                 vendorNames={selectedVendorsForPayment}
@@ -298,31 +220,12 @@ export default function App() {
               />
             )}
 
-            {/* Settlement Tab */}
             {activeTab === 'settlement' && (
               <SettlementTab selectedVendors={selectedVendorsForPayment} />
             )}
 
-            {/* Reconciliation Tab */}
             {activeTab === 'reconciliation' && (
-              <>
-                <ReconciliationDashboard
-                  metrics={metrics}
-                  visibleRows={visibleRows}
-                  paginatedExceptions={paginatedExceptions}
-                  currentPage={currentPage}
-                  totalPages={totalPages}
-                  onPageChange={setCurrentPage}
-                  onReset={resetDashboardView}
-                />
-                <ChartsPanel
-                  metrics={metrics}
-                  rows={visibleRows}
-                  onStatusSelect={toggleStatusFilter}
-                  onHospitalSelect={toggleHospitalFilter}
-                  onRailSelect={toggleRailFilter}
-                />
-              </>
+              <ReconciliationDashboard />
             )}
           </div>
         </>
