@@ -10,11 +10,11 @@ export function MetricCard({ label, value, tone = 'default', active = false, onC
   return (
     <button
       type="button"
-      className={`metric-card metric-card--${tone} ${active ? 'metric-card--active' : ''} ${onClick ? 'metric-card--interactive' : ''}`}
+      className={`metric-card ${tone !== 'default' ? `tone--${tone}` : ''} ${active ? 'active' : ''}`}
       onClick={onClick}
       disabled={!onClick}
     >
-      <span>{label}</span>
+      <h4>{label}</h4>
       <strong>{value}</strong>
     </button>
   );

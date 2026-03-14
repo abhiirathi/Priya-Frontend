@@ -13,6 +13,30 @@ export function reconcileTransactions(
   pineLabsRows: PineLabsTransaction[],
   bankRows: BankTransaction[]
 ): ReconciliationRow[] {
+  // If no Pine Labs data, return empty (can only reconcile with Pine Labs data)
+  if (pineLabsRows.length === 0) {
+    return [];
+  }
+
+  // If no bank data, show all Pine Labs records as unreconciled
+  if (bankRows.length === 0) {
+    return pineLabsRows.map((payment) => ({
+      orderId: payment.order_id,
+      utr: payment.utr,
+      hospitalId: payment.hospital_id,
+      hospitalName: payment.hospital_name,
+      pineLabsAmount: payment.net_amount,
+      bankAmount: 0,
+      variance: -payment.net_amount,
+      variancePercent: 100,
+      expectedSettlementDate: payment.expected_settlement_date,
+      actualCreditDate: null,
+      status: 'unreconciled' as const,
+      rail: payment.rail
+    }));
+  }
+
+  // Both datasets available - perform full reconciliation
   const bankByUtr = new Map(bankRows.map((row) => [row.utr, row]));
 
   return pineLabsRows.map((payment) => {

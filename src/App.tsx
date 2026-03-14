@@ -2,7 +2,9 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import Papa from 'papaparse';
 import { ChartsPanel } from './components/ChartsPanel';
 import { FileDrop } from './components/FileDrop';
-import { MetricCard } from './components/MetricCard';
+import { ReconciliationDashboard } from './components/ReconciliationDashboard';
+import { AnimatedBackground } from './components/AnimatedBackground';
+import { TypingAnimation } from './components/TypingAnimation';
 import { buildMetrics, reconcileTransactions } from './lib/reconcile';
 import type { BankTransaction, PineLabsTransaction, ReconciliationRow } from './types';
 
@@ -10,14 +12,6 @@ async function parseCsvFile<T>(file: File): Promise<T[]> {
   const text = await file.text();
   const parsed = Papa.parse<T>(text, { header: true, dynamicTyping: true, skipEmptyLines: true });
   return parsed.data;
-}
-
-function formatCurrency(value: number) {
-  return new Intl.NumberFormat('en-IN', {
-    style: 'currency',
-    currency: 'INR',
-    maximumFractionDigits: 0
-  }).format(value);
 }
 
 type PromptEntry = {
@@ -92,6 +86,31 @@ export default function App() {
   const [currentPage, setCurrentPage] = useState(1);
   const [dashboardFilter, setDashboardFilter] = useState<DashboardFilter>({});
 
+  // Auto-load sample datasets on component mount
+  useEffect(() => {
+    const loadSampleData = async () => {
+      try {
+        // Load Pine Labs data
+        const plResponse = await fetch('/datasets/pine_labs_hospital_payments.csv');
+        const plText = await plResponse.text();
+        const plParsed = Papa.parse<PineLabsTransaction>(plText, { header: true, dynamicTyping: true, skipEmptyLines: true });
+        setPineLabsRows(plParsed.data);
+        setPineLabsFileName('pine_labs_hospital_payments.csv');
+
+        // Load Bank data
+        const bankResponse = await fetch('/datasets/hospital_bank_statement.csv');
+        const bankText = await bankResponse.text();
+        const bankParsed = Papa.parse<BankTransaction>(bankText, { header: true, dynamicTyping: true, skipEmptyLines: true });
+        setBankRows(bankParsed.data);
+        setBankFileName('hospital_bank_statement.csv');
+      } catch (err) {
+        console.error('Error loading sample data:', err);
+      }
+    };
+
+    loadSampleData();
+  }, []);
+
   const visibleRows = useMemo(() => {
     return promptRows.filter((row) => {
       if (dashboardFilter.status && row.status !== dashboardFilter.status) return false;
@@ -104,13 +123,17 @@ export default function App() {
   const metrics = buildMetrics(visibleRows);
 
   const handleReconcile = () => {
-    if (pineLabsRows.length === 0 || bankRows.length === 0) {
-      setError('Upload both datasets before running reconciliation.');
+    if (pineLabsRows.length === 0 && bankRows.length === 0) {
+      setError('Upload at least one dataset to run reconciliation.');
       return;
     }
 
     setError('');
-    const nextResults = reconcileTransactions(pineLabsRows, bankRows);
+    // Use whichever dataset is available, or both if both are available
+    const usePineLabs = pineLabsRows.length > 0 ? pineLabsRows : [];
+    const useBank = bankRows.length > 0 ? bankRows : [];
+
+    const nextResults = reconcileTransactions(usePineLabs, useBank);
     setResults(nextResults);
     setPromptRows(nextResults);
     setPromptHistory([]);
@@ -224,226 +247,125 @@ export default function App() {
     <div className="app-shell">
       {!hasReconciled ? (
         <>
-          <section className="hero hero--simple">
-            <div className="hero__copy hero__copy--full">
-              <h1>PRIYA</h1>
-              <h2>Proactive Revenue & Invoice Yield Automator</h2>
-              <div className="statement-block statement-block--pitch">
-                <p>
-                  An autonomous B2B commerce agent that orchestrates procurement payments end-to-end — from a single
-                  natural language instruction to multi-vendor payouts — and self-heals when anything breaks, without a
-                  human ever touching the payment stack.
+          {/* Netflix-Style Hero */}
+          <div className="netflix-hero">
+            <AnimatedBackground />
+            <div className="netflix-hero__overlay" />
+
+            <div className="netflix-hero__content">
+              <div className="netflix-hero__main">
+                <div className="netflix-hero__title-wrapper">
+                  <h1 className="netflix-hero__title">PRIYA</h1>
+                  <p className="netflix-hero__tagline">Proactive Revenue & Invoice Yield Automator</p>
+                </div>
+                <p className="netflix-hero__subtitle">
+                  <TypingAnimation
+                    baseText="Vendor payments shouldn't take 3-5 hours"
+                    endings={[
+                      ' a week.',
+                      ' per merchant.',
+                      ' every week.',
+                      ' to process.'
+                    ]}
+                    typingSpeed={40}
+                    delayBetweenEndings={2500}
+                    className="typing-text"
+                  />
                 </p>
+                <p className="netflix-hero__description">
+                  One sentence. That's all it takes. Tell PRIYA what to do, and watch as it orchestrates every payment, every refund, every settlement, and every reconciliation — autonomously. From invoice to audit trail.
+                </p>
+
+                <div className="netflix-hero__features">
+                  <div className="netflix-hero__feature">
+                    <span className="netflix-hero__feature-icon">⚡</span>
+                    <span className="netflix-hero__feature-text">From 5 hours to 5 seconds</span>
+                  </div>
+                  <div className="netflix-hero__feature">
+                    <span className="netflix-hero__feature-icon">🤖</span>
+                    <span className="netflix-hero__feature-text">Fully autonomous orchestration</span>
+                  </div>
+                  <div className="netflix-hero__feature">
+                    <span className="netflix-hero__feature-icon">📋</span>
+                    <span className="netflix-hero__feature-text">CA-ready audit trail included</span>
+                  </div>
+                </div>
+
+                <div className="netflix-hero__cta">
+                  <button
+                    className="netflix-btn netflix-btn--secondary"
+                    onClick={() => {
+                      const el = document.querySelector('.upload-section');
+                      el?.scrollIntoView({ behavior: 'smooth' });
+                    }}
+                  >
+                    More Info
+                  </button>
+                </div>
               </div>
             </div>
-          </section>
+          </div>
 
-          <section className="panel problem-block">
-            <div className="panel__header">
-              <h3>The Problem</h3>
-            </div>
-            <p>
-              Small businesses and merchants spend significant time manually managing vendor payments and operational
-              finance tasks such as transferring money to suppliers, retrying failed payments, and reconciling
-              settlements. These workflows are repetitive, error-prone, and operationally expensive.
-            </p>
-            <p>
-              When payments fail or balances are insufficient, merchants must manually intervene, often delaying vendor
-              payments and disrupting supply chains. PRIYA removes that manual orchestration layer.
-            </p>
-          </section>
+          {/* Upload Section */}
+          <section className="upload-section">
+            <div className="upload-section__container">
+              <div className="upload-section__header">
+                <h2>See It In Action</h2>
+                <p>Upload your payment data. Watch it reconcile perfectly.</p>
+              </div>
 
-          <section className="upload-grid upload-grid--simple">
-            <FileDrop
-              title="Upload synthetic data (Pine Labs)"
-              accept=".csv"
-              fileName={pineLabsFileName}
-              onChange={handlePineLabsUpload}
-              onRemove={clearPineLabsUpload}
-            />
-            <FileDrop
-              title="Upload bank statement"
-              accept=".csv"
-              fileName={bankFileName}
-              onChange={handleBankUpload}
-              onRemove={clearBankUpload}
-            />
-          </section>
+              <div className="upload-section__grid">
+                <FileDrop
+                  title={pineLabsFileName ? "✓ Payment Orders" : "Payment Orders"}
+                  accept=".csv"
+                  fileName={pineLabsFileName}
+                  onChange={handlePineLabsUpload}
+                  onRemove={clearPineLabsUpload}
+                />
+                <FileDrop
+                  title={bankFileName ? "✓ Bank Statement" : "Bank Statement"}
+                  accept=".csv"
+                  fileName={bankFileName}
+                  onChange={handleBankUpload}
+                  onRemove={clearBankUpload}
+                />
+              </div>
 
-          <section className="cta-strip">
-            {error ? <p className="form-error">{error}</p> : null}
-            <div className="hero__actions hero__actions--center">
-              <button className="primary-button primary-button--large" onClick={handleReconcile}>
-                Reconcile
+              {error && <p className="upload-section__error">{error}</p>}
+
+              <button
+                className="netflix-btn netflix-btn--primary netflix-btn--full"
+                onClick={handleReconcile}
+                disabled={pineLabsRows.length === 0 && bankRows.length === 0}
+              >
+                <span>✨</span> See Your Data Reconcile Live
               </button>
             </div>
           </section>
         </>
       ) : (
         <>
-          <section className="workspace-grid">
-            <div className="workspace-main">
-              <section className="hero hero--dashboard">
-                <div className="hero__copy">
-                  <h2 className="dashboard-title">Reconciliation dashboard</h2>
-                </div>
-                <div className="dashboard-reset-wrap">
-                  <button type="button" className="primary-button dashboard-reset" onClick={resetDashboardView}>
-                    Reset
-                  </button>
-                </div>
-              </section>
-
-              <section className="metrics-grid">
-                <MetricCard label="Total transactions" value={String(metrics.totalTransactions)} />
-                <MetricCard
-                  label="Reconciled %"
-                  value={`${metrics.reconciledPercent}%`}
-                  tone="good"
-                  active={dashboardFilter.status === 'reconciled'}
-                  onClick={() => toggleStatusFilter('reconciled')}
-                />
-                <MetricCard
-                  label="Unreconciled %"
-                  value={`${metrics.unreconciledPercent}%`}
-                  tone="danger"
-                  active={dashboardFilter.status === 'unreconciled'}
-                  onClick={() => toggleStatusFilter('unreconciled')}
-                />
-                <MetricCard
-                  label="High-risk cases"
-                  value={String(metrics.highRiskCount)}
-                  tone="danger"
-                  active={dashboardFilter.status === 'high-risk'}
-                  onClick={() => toggleStatusFilter('high-risk')}
-                />
-                <MetricCard label="Pine Labs volume" value={formatCurrency(metrics.totalPineLabsVolume)} />
-                <MetricCard label="Bank credited volume" value={formatCurrency(metrics.totalBankVolume)} />
-              </section>
-
-              <section className="tables-grid tables-grid--single">
-                <article className="panel">
-                  <div className="panel__header">
-                    <h3>Exception queue</h3>
-                    <p>Rows requiring operator action or escalation.</p>
-                  </div>
-                  <div className="table-pagination">
-                    <span>
-                      Page {currentPage} of {totalPages}
-                    </span>
-                    <div className="table-pagination__actions">
-                      <button
-                        type="button"
-                        className="ghost-button table-pagination__button"
-                        onClick={() => setCurrentPage((page) => Math.max(1, page - 1))}
-                        disabled={currentPage === 1}
-                      >
-                        Previous
-                      </button>
-                      <button
-                        type="button"
-                        className="ghost-button table-pagination__button"
-                        onClick={() => setCurrentPage((page) => Math.min(totalPages, page + 1))}
-                        disabled={currentPage === totalPages}
-                      >
-                        Next
-                      </button>
-                    </div>
-                  </div>
-                  <div className="table-wrap">
-                    <table>
-                      <thead>
-                        <tr>
-                          <th>Order</th>
-                          <th>UTR</th>
-                          <th>Hospital</th>
-                          <th>Status</th>
-                          <th>Variance</th>
-                          <th>Variance %</th>
-                          <th>Expected</th>
-                          <th>Credited</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {paginatedExceptions.length > 0 ? (
-                          paginatedExceptions.map((row) => (
-                            <tr key={row.orderId}>
-                              <td>{row.orderId}</td>
-                              <td>{row.utr}</td>
-                              <td>{row.hospitalName}</td>
-                              <td>
-                                <span className={`status-pill status-pill--${row.status}`}>{row.status}</span>
-                              </td>
-                              <td>{formatCurrency(row.variance)}</td>
-                              <td>{row.variancePercent}%</td>
-                              <td>{row.expectedSettlementDate}</td>
-                              <td>{row.actualCreditDate ?? 'Pending'}</td>
-                            </tr>
-                          ))
-                        ) : (
-                          <tr>
-                            <td colSpan={8}>No exception rows in the current agent view.</td>
-                          </tr>
-                        )}
-                      </tbody>
-                    </table>
-                  </div>
-                </article>
-              </section>
-
-              <ChartsPanel
-                metrics={metrics}
-                rows={visibleRows}
-                onStatusSelect={toggleStatusFilter}
-                onHospitalSelect={toggleHospitalFilter}
-                onRailSelect={toggleRailFilter}
-              />
-            </div>
-
-            <aside className="workspace-side panel">
-              <div className="panel__header">
-                <h3>Agent workspace</h3>
-              </div>
-
-              <div className="agent-box">
-                <div className="agent-history-box" ref={historyRef}>
-                  {promptHistory.length > 0 ? (
-                    promptHistory.map((entry, index) => (
-                      <article key={`${entry.prompt}-${index}`} className="history-item">
-                        <div className="history-item__meta">
-                          <span className="history-item__label">Prompt</span>
-                          <span className="history-item__time">{entry.timestamp}</span>
-                        </div>
-                        <strong>{entry.prompt}</strong>
-                        <span className="history-item__label">Result</span>
-                        <p>{entry.summary}</p>
-                      </article>
-                    ))
-                  ) : (
-                    <p className="history-empty">No prompts yet.</p>
-                  )}
-                </div>
-                <div className="agent-input-row">
-                  <textarea
-                    className="agent-input"
-                    placeholder="Try: show me the high-risk cases"
-                    value={prompt}
-                    onChange={(event) => setPrompt(event.target.value)}
-                    onKeyDown={(event) => {
-                      if (event.key === 'Enter' && (event.metaKey || event.ctrlKey)) {
-                        event.preventDefault();
-                        handlePromptSubmit();
-                      }
-                    }}
-                  />
-                  <button className="run-icon-button" onClick={handlePromptSubmit} aria-label="Run prompt">
-                    ▶
-                  </button>
-                </div>
-                {promptError ? <p className="form-error">{promptError}</p> : null}
-              </div>
-            </aside>
-          </section>
+          <ReconciliationDashboard
+            metrics={metrics}
+            visibleRows={visibleRows}
+            paginatedExceptions={paginatedExceptions}
+            currentPage={currentPage}
+            totalPages={totalPages}
+            onPageChange={setCurrentPage}
+            onReset={resetDashboardView}
+            prompt={prompt}
+            onPromptChange={setPrompt}
+            onPromptSubmit={handlePromptSubmit}
+            promptHistory={promptHistory}
+            promptError={promptError}
+          />
+          <ChartsPanel
+            metrics={metrics}
+            rows={visibleRows}
+            onStatusSelect={toggleStatusFilter}
+            onHospitalSelect={toggleHospitalFilter}
+            onRailSelect={toggleRailFilter}
+          />
         </>
       )}
     </div>
