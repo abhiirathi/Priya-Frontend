@@ -3,9 +3,10 @@
 /* Dashboard Container */
 .dashboard-container {
   display: grid;
-  grid-template-columns: 1fr 380px;
+  grid-template-columns: 1fr;
   gap: 28px;
   animation: fadeIn 0.6s ease-out;
+  width: 100%;
 }
 
 .dashboard-main {

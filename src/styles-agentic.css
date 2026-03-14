@@ -1,0 +1,750 @@
+/* Agentic App - Operational Dashboard Design */
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+:root {
+  --bg-primary: #0a0e27;
+  --bg-secondary: #1a1f3a;
+  --bg-tertiary: #2a2f4a;
+  --text-primary: #ffffff;
+  --text-secondary: #cbd5e1;
+  --text-muted: #94a3b8;
+  --border: #334155;
+  --accent: #3b82f6;
+  --accent-glow: #0ea5e9;
+  --success: #10b981;
+  --warning: #f59e0b;
+  --error: #ef4444;
+}
+
+html, body {
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  overflow: hidden;
+  height: 100%;
+}
+
+#root {
+  height: 100%;
+}
+
+.agentic-app {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  background: var(--bg-primary);
+}
+
+/* ===== TOP BAR ===== */
+
+.agentic-topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 70px;
+  padding: 0 24px;
+  background: linear-gradient(180deg, #1a1f3a 0%, #0f1629 100%);
+  border-bottom: 1px solid var(--border);
+  gap: 24px;
+}
+
+.agentic-topbar__left {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  min-width: fit-content;
+}
+
+.agentic-logo {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.agentic-logo__icon {
+  width: 32px;
+  height: 32px;
+  border-radius: 6px;
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  color: white;
+  font-size: 16px;
+}
+
+.agentic-logo__text {
+  font-size: 16px;
+  font-weight: 700;
+  color: #10b981;
+  letter-spacing: 1px;
+}
+
+.agentic-topbar__center {
+  display: flex;
+  align-items: center;
+  gap: 32px;
+  flex: 1;
+  justify-content: center;
+}
+
+.agentic-status-group {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.agentic-persona-badge {
+  padding: 6px 12px;
+  background: rgba(59, 130, 246, 0.15);
+  border: 1px solid rgba(59, 130, 246, 0.3);
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #60a5fa;
+  text-transform: uppercase;
+}
+
+.agentic-run-id {
+  font-size: 12px;
+  color: var(--text-muted);
+  font-family: 'Monaco', 'Menlo', monospace;
+}
+
+/* Step Indicators */
+.agentic-steps-indicator {
+  display: flex;
+  align-items: center;
+  gap: 0;
+}
+
+.agentic-step-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.agentic-dot {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: rgba(148, 163, 184, 0.2);
+  border: 2px solid rgba(148, 163, 184, 0.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  color: var(--text-muted);
+  font-weight: bold;
+}
+
+.agentic-dot--active {
+  background: rgba(59, 130, 246, 0.2);
+  border-color: #3b82f6;
+  color: #3b82f6;
+  animation: pulse-dot 2s ease-in-out infinite;
+}
+
+.agentic-dot--done {
+  background: rgba(16, 185, 129, 0.2);
+  border-color: #10b981;
+  color: #10b981;
+}
+
+@keyframes pulse-dot {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.15);
+    opacity: 0.8;
+  }
+}
+
+.agentic-step-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  white-space: nowrap;
+}
+
+.agentic-step-divider {
+  width: 20px;
+  height: 1px;
+  background: rgba(148, 163, 184, 0.2);
+  margin: 0 8px;
+}
+
+.agentic-topbar__right {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  min-width: fit-content;
+}
+
+.agentic-status-badge {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  background: rgba(245, 158, 11, 0.15);
+  border: 1px solid rgba(245, 158, 11, 0.3);
+  border-radius: 6px;
+  font-size: 12px;
+  color: #fbbf24;
+  font-weight: 500;
+}
+
+.agentic-status-pulse {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #fbbf24;
+  animation: pulse 2s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.4;
+  }
+}
+
+/* ===== MAIN LAYOUT ===== */
+
+.agentic-main {
+  display: flex;
+  flex: 1;
+  gap: 0;
+  overflow: hidden;
+}
+
+.agentic-content {
+  flex: 1;
+  overflow-y: auto;
+  padding: 24px;
+  background: var(--bg-primary);
+}
+
+/* ===== RUN BOARD ===== */
+
+.agentic-run-board {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.agentic-run-board__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.agentic-run-board__header h2 {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--text-primary);
+  letter-spacing: 1px;
+}
+
+.agentic-run-board__count {
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+/* Vendors Table */
+.agentic-vendors-table {
+  width: 100%;
+  border-collapse: collapse;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.agentic-vendors-table thead {
+  background: rgba(59, 130, 246, 0.05);
+  border-bottom: 1px solid var(--border);
+}
+
+.agentic-vendors-table th {
+  padding: 12px 16px;
+  text-align: left;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.agentic-vendors-table td {
+  padding: 14px 16px;
+  font-size: 13px;
+  border-bottom: 1px solid var(--border);
+}
+
+.agentic-vendor-row {
+  transition: background-color 200ms ease;
+}
+
+.agentic-vendor-row:hover {
+  background: rgba(59, 130, 246, 0.05);
+}
+
+.agentic-vendor-row--processed {
+  background: rgba(16, 185, 129, 0.05);
+}
+
+.agentic-vendor-row--retry {
+  background: rgba(245, 158, 11, 0.05);
+  border-left: 3px solid #f59e0b;
+}
+
+.agentic-vendor-row--authorized {
+  background: rgba(59, 130, 246, 0.05);
+  border-left: 3px solid #f59e0b;
+}
+
+.agentic-vendor-name {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 500;
+  color: var(--text-primary);
+}
+
+.agentic-vendor-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.agentic-vendor-dot--created,
+.agentic-vendor-dot--pending {
+  background: rgba(148, 163, 184, 0.4);
+}
+
+.agentic-vendor-dot--processing {
+  background: #3b82f6;
+  animation: pulse 1.5s ease-in-out infinite;
+}
+
+.agentic-vendor-dot--processed {
+  background: #10b981;
+}
+
+.agentic-vendor-dot--authorized {
+  background: #f59e0b;
+}
+
+.agentic-vendor-dot--retry {
+  background: #f59e0b;
+  animation: pulse 1.5s ease-in-out infinite;
+}
+
+.agentic-vendor-dot--failed {
+  background: #ef4444;
+}
+
+.agentic-rail {
+  color: var(--text-secondary);
+  font-weight: 500;
+}
+
+.agentic-payment-link {
+  color: #3b82f6;
+  text-decoration: none;
+  font-weight: 600;
+  font-size: 12px;
+  font-family: 'Monaco', 'Courier New', monospace;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.agentic-payment-link:hover {
+  color: #0ea5e9;
+  text-decoration: underline;
+}
+
+.agentic-payment-link-empty {
+  color: #94a3b8;
+}
+
+.agentic-rail-history {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+}
+
+.agentic-rail-from {
+  text-decoration: line-through;
+  opacity: 0.6;
+}
+
+.agentic-rail-arrow {
+  color: var(--text-muted);
+}
+
+.agentic-rail-to {
+  color: #10b981;
+  font-weight: 600;
+}
+
+.agentic-status-badge {
+  display: inline-block;
+  padding: 4px 10px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.agentic-status-badge--processed {
+  background: rgba(16, 185, 129, 0.15);
+  color: #10b981;
+}
+
+.agentic-status-badge--pending,
+.agentic-status-badge--processing {
+  background: rgba(59, 130, 246, 0.15);
+  color: #60a5fa;
+}
+
+.agentic-status-badge--retry {
+  background: rgba(245, 158, 11, 0.15);
+  color: #fbbf24;
+}
+
+.agentic-status-badge--authorized {
+  background: rgba(245, 158, 11, 0.15);
+  color: #fbbf24;
+}
+
+.agentic-status-badge--failed {
+  background: rgba(239, 68, 68, 0.15);
+  color: #fca5a5;
+}
+
+.agentic-status-badge--created {
+  background: rgba(148, 163, 184, 0.15);
+  color: var(--text-muted);
+}
+
+/* Annotations */
+.agentic-annotations {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 16px;
+  padding: 12px;
+  background: rgba(245, 158, 11, 0.05);
+  border: 1px solid rgba(245, 158, 11, 0.2);
+  border-radius: 6px;
+}
+
+.agentic-annotation {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
+.agentic-annotation__icon {
+  color: #f59e0b;
+  font-weight: bold;
+}
+
+/* ===== CHAT SIDEBAR ===== */
+
+.agentic-chat-sidebar {
+  width: 420px;
+  display: flex;
+  flex-direction: column;
+  background: linear-gradient(180deg, #1a1f3a 0%, #0f1629 100%);
+  border-left: 1px solid var(--border);
+  overflow: hidden;
+}
+
+.agentic-chat-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px;
+  border-bottom: 1px solid var(--border);
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.1) 0%, transparent 100%);
+}
+
+.agentic-chat-header__title {
+  font-weight: 700;
+  font-size: 13px;
+  color: var(--text-primary);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.agentic-logs-toggle {
+  padding: 6px 12px;
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  color: var(--text-muted);
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 200ms ease;
+  text-transform: uppercase;
+}
+
+.agentic-logs-toggle:hover {
+  background: rgba(59, 130, 246, 0.1);
+  border-color: #3b82f6;
+  color: #60a5fa;
+}
+
+.agentic-logs-toggle--active {
+  background: rgba(59, 130, 246, 0.15);
+  border-color: #3b82f6;
+  color: #60a5fa;
+}
+
+/* Chat Messages */
+.agentic-chat-messages {
+  flex: 1;
+  overflow-y: auto;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.agentic-chat-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  height: 100%;
+  color: var(--text-muted);
+  text-align: center;
+  padding: 32px;
+}
+
+.agentic-chat-empty__icon {
+  font-size: 40px;
+}
+
+.agentic-chat-empty__text {
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.agentic-chat-message {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  animation: slideIn 300ms ease;
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.agentic-chat-message__time {
+  font-size: 11px;
+  color: var(--text-muted);
+  font-family: 'Monaco', 'Menlo', monospace;
+}
+
+.agentic-chat-message__content {
+  font-size: 12px;
+  line-height: 1.5;
+  padding: 8px 12px;
+  border-radius: 6px;
+  word-wrap: break-word;
+}
+
+.agentic-chat-message--assistant .agentic-chat-message__content {
+  background: rgba(59, 130, 246, 0.1);
+  color: #93c5fd;
+  border-left: 2px solid #3b82f6;
+}
+
+.agentic-chat-message--user .agentic-chat-message__content {
+  background: rgba(16, 185, 129, 0.1);
+  color: #6ee7b7;
+  border-left: 2px solid #10b981;
+}
+
+.agentic-chat-message--assistant--warn .agentic-chat-message__content {
+  background: rgba(245, 158, 11, 0.1);
+  color: #fcd34d;
+  border-left: 2px solid #f59e0b;
+}
+
+.agentic-chat-message--assistant--error .agentic-chat-message__content {
+  background: rgba(239, 68, 68, 0.1);
+  color: #fca5a5;
+  border-left: 2px solid #ef4444;
+}
+
+/* System Logs */
+.agentic-system-logs {
+  flex: 1;
+  overflow-y: auto;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-family: 'Monaco', 'Menlo', monospace;
+  font-size: 11px;
+}
+
+.agentic-log-entry {
+  display: flex;
+  gap: 8px;
+  color: var(--text-muted);
+  line-height: 1.4;
+}
+
+.agentic-log-time {
+  color: #60a5fa;
+  flex-shrink: 0;
+}
+
+.agentic-log-message {
+  color: var(--text-secondary);
+}
+
+/* Chat Input */
+.agentic-chat-input {
+  display: flex;
+  gap: 8px;
+  padding: 12px;
+  border-top: 1px solid var(--border);
+  background: linear-gradient(180deg, transparent 0%, rgba(0, 0, 0, 0.2) 100%);
+}
+
+.agentic-chat-input__field {
+  flex: 1;
+  padding: 10px 12px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  color: var(--text-primary);
+  font-size: 12px;
+  transition: all 200ms ease;
+}
+
+.agentic-chat-input__field:focus {
+  outline: none;
+  border-color: #3b82f6;
+  background: rgba(59, 130, 246, 0.1);
+}
+
+.agentic-chat-input__field::placeholder {
+  color: var(--text-muted);
+}
+
+.agentic-chat-input__field:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.agentic-chat-input__send {
+  padding: 10px 12px;
+  background: #3b82f6;
+  border: none;
+  border-radius: 6px;
+  color: white;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 200ms ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+}
+
+.agentic-chat-input__send:hover:not(:disabled) {
+  background: #2563eb;
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
+}
+
+.agentic-chat-input__send:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* ===== SCROLLBAR ===== */
+
+.agentic-chat-messages::-webkit-scrollbar,
+.agentic-content::-webkit-scrollbar,
+.agentic-system-logs::-webkit-scrollbar {
+  width: 8px;
+}
+
+.agentic-chat-messages::-webkit-scrollbar-track,
+.agentic-content::-webkit-scrollbar-track,
+.agentic-system-logs::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.agentic-chat-messages::-webkit-scrollbar-thumb,
+.agentic-content::-webkit-scrollbar-thumb,
+.agentic-system-logs::-webkit-scrollbar-thumb {
+  background: rgba(148, 163, 184, 0.3);
+  border-radius: 4px;
+}
+
+.agentic-chat-messages::-webkit-scrollbar-thumb:hover,
+.agentic-content::-webkit-scrollbar-thumb:hover,
+.agentic-system-logs::-webkit-scrollbar-thumb:hover {
+  background: rgba(148, 163, 184, 0.5);
+}
+
+/* ===== RESPONSIVE ===== */
+
+@media (max-width: 1400px) {
+  .agentic-chat-sidebar {
+    width: 380px;
+  }
+}
+
+@media (max-width: 1024px) {
+  .agentic-chat-sidebar {
+    display: none;
+  }
+
+  .agentic-topbar {
+    flex-direction: column;
+    height: auto;
+    gap: 12px;
+    padding: 12px;
+  }
+
+  .agentic-topbar__center {
+    width: 100%;
+  }
+
+  .agentic-content {
+    padding: 16px;
+  }
+}

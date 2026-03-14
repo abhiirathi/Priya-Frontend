@@ -801,6 +801,15 @@
   word-break: break-word;
 }
 
+.payment-link-card__link-text {
+  color: #3b82f6;
+  font-family: 'Monaco', 'Courier New', monospace;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  text-decoration: underline;
+}
+
 .payment-link-card__link {
   display: flex;
   gap: 8px;
@@ -837,6 +846,54 @@
 .payment-link-card__copy-btn:hover {
   background: #059669;
   transform: translateY(-1px);
+}
+
+.payment-link-card__demo-section {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  margin-top: 16px;
+  padding-top: 12px;
+  border-top: 1px solid #e2e8f0;
+}
+
+.payment-link-card__demo-btn {
+  flex: 1;
+  background: linear-gradient(135deg, #3b82f6 0%, #0ea5e9 100%);
+  border: none;
+  border-radius: 6px;
+  padding: 10px 14px;
+  color: white;
+  font-weight: 700;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: all 0.2s ease-out;
+  white-space: nowrap;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+}
+
+.payment-link-card__demo-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 12px rgba(59, 130, 246, 0.4);
+}
+
+.payment-link-card__demo-btn:visited {
+  color: white;
+}
+
+.payment-link-card__demo-badge {
+  display: inline-block;
+  background: #dbeafe;
+  color: #0369a1;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
 }
 
 .payment-link-card__error {

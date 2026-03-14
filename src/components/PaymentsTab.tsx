@@ -160,6 +160,12 @@ export function PaymentsTab({ vendorNames, vendorAmounts = {}, onPaymentLinksGen
                     <span className="payment-link-card__label">Generated At</span>
                     <span className="payment-link-card__value">{payment.timestamp}</span>
                   </div>
+                  <div className="payment-link-card__row">
+                    <span className="payment-link-card__label">Payment Link</span>
+                    <span className="payment-link-card__value payment-link-card__link-text" title={payment.paymentLink}>
+                      {payment.paymentLink?.substring(0, 40)}...
+                    </span>
+                  </div>
                   <div className="payment-link-card__link">
                     <input
                       type="text"
@@ -174,6 +180,19 @@ export function PaymentsTab({ vendorNames, vendorAmounts = {}, onPaymentLinksGen
                       Copy
                     </button>
                   </div>
+                  {index === 0 && (
+                    <div className="payment-link-card__demo-section">
+                      <a
+                        href="https://api-staging.pluralonline.com/api/v3/checkout-bff/pbl/redirect?paymentLinkId=4JKD8GiZsD2M007zfYqjf4wxFNNay2KAa8Pqf0rx1oY%3D"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="payment-link-card__demo-btn"
+                      >
+                        🔗 Open PineLabs Payment
+                      </a>
+                      <span className="payment-link-card__demo-badge">Demo Link</span>
+                    </div>
+                  )}
                 </>
               )}
 

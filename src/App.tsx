@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import Papa from 'papaparse';
 import { ChartsPanel } from './components/ChartsPanel';
 import { FileDrop } from './components/FileDrop';
@@ -18,60 +18,12 @@ async function parseCsvFile<T>(file: File): Promise<T[]> {
   return parsed.data;
 }
 
-type PromptEntry = {
-  prompt: string;
-  summary: string;
-  timestamp: string;
-};
-
 type DashboardFilter = {
   status?: 'reconciled' | 'unreconciled' | 'high-risk' | 'delayed';
   hospital?: string;
   rail?: string;
 };
 
-function applyPrompt(rows: ReconciliationRow[], prompt: string) {
-  const normalized = prompt.trim().toLowerCase();
-  let filtered = rows;
-  let summary = 'Showing the full reconciliation view.';
-
-  if (normalized.includes('high risk') || normalized.includes('high-risk')) {
-    filtered = rows.filter((row) => row.status === 'high-risk');
-    summary = 'Showing only high-risk cases.';
-  } else if (normalized.includes('delayed')) {
-    filtered = rows.filter((row) => row.status === 'delayed');
-    summary = 'Showing delayed settlement cases.';
-  } else if (normalized.includes('unreconciled') || normalized.includes('mismatch')) {
-    filtered = rows.filter((row) => row.status === 'unreconciled');
-    summary = 'Showing unreconciled cases.';
-  } else if (normalized.includes('reconciled')) {
-    filtered = rows.filter((row) => row.status === 'reconciled');
-    summary = 'Showing reconciled transactions.';
-  } else if (normalized.includes('upi')) {
-    filtered = rows.filter((row) => row.rail.toLowerCase() === 'upi');
-    summary = 'Showing UPI transactions.';
-  } else if (normalized.includes('card')) {
-    filtered = rows.filter((row) => row.rail.toLowerCase() === 'card');
-    summary = 'Showing card transactions.';
-  } else if (normalized.includes('netbanking')) {
-    filtered = rows.filter((row) => row.rail.toLowerCase() === 'netbanking');
-    summary = 'Showing netbanking transactions.';
-  } else if (normalized.includes('emi')) {
-    filtered = rows.filter((row) => row.rail.toLowerCase() === 'emi');
-    summary = 'Showing EMI transactions.';
-  } else {
-    const hospitalMatch = rows.find((row) => normalized.includes(row.hospitalName.toLowerCase()));
-    if (hospitalMatch) {
-      filtered = rows.filter((row) => row.hospitalId === hospitalMatch.hospitalId);
-      summary = `Showing transactions for ${hospitalMatch.hospitalName}.`;
-    }
-  }
-
-  return {
-    filtered,
-    summary
-  };
-}
 
 export default function App() {
   const PAGE_SIZE = 5;
@@ -85,10 +37,6 @@ export default function App() {
   const [error, setError] = useState('');
   const [pineLabsFileName, setPineLabsFileName] = useState('');
   const [bankFileName, setBankFileName] = useState('');
-  const [prompt, setPrompt] = useState('');
-  const [promptHistory, setPromptHistory] = useState<PromptEntry[]>([]);
-  const [promptError, setPromptError] = useState('');
-  const historyRef = useRef<HTMLDivElement | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [dashboardFilter, setDashboardFilter] = useState<DashboardFilter>({});
 
@@ -142,9 +90,6 @@ export default function App() {
     const nextResults = reconcileTransactions(usePineLabs, useBank);
     setResults(nextResults);
     setPromptRows(nextResults);
-    setPromptHistory([]);
-    setPrompt('');
-    setPromptError('');
     setDashboardFilter({});
     setCurrentPage(1);
     setHasReconciled(true);
@@ -190,27 +135,6 @@ export default function App() {
   const totalPages = Math.max(1, Math.ceil(exceptions.length / PAGE_SIZE));
   const paginatedExceptions = exceptions.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE);
 
-  const handlePromptSubmit = () => {
-    if (!prompt.trim()) {
-      setPromptError('Enter a prompt for the agent.');
-      return;
-    }
-
-    const response = applyPrompt(results, prompt);
-    setPromptRows(response.filtered);
-    setDashboardFilter({});
-    setPromptHistory((current) => [
-      ...current,
-      {
-        prompt,
-        summary: response.summary,
-        timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-      }
-    ]);
-    setPrompt('');
-    setPromptError('');
-    setCurrentPage(1);
-  };
 
   const toggleStatusFilter = (status: 'reconciled' | 'unreconciled' | 'high-risk' | 'delayed') => {
     setDashboardFilter((current) => ({
@@ -239,8 +163,6 @@ export default function App() {
   const resetDashboardView = () => {
     setPromptRows(results);
     setDashboardFilter({});
-    setPrompt('');
-    setPromptError('');
     setCurrentPage(1);
   };
 
@@ -252,10 +174,6 @@ export default function App() {
     }, 300);
   };
 
-  useEffect(() => {
-    if (!historyRef.current) return;
-    historyRef.current.scrollTop = historyRef.current.scrollHeight;
-  }, [promptHistory]);
 
   return (
     <div className="app-shell">
@@ -396,13 +314,6 @@ export default function App() {
                   totalPages={totalPages}
                   onPageChange={setCurrentPage}
                   onReset={resetDashboardView}
-                  prompt={prompt}
-                  onPromptChange={setPrompt}
-                  onPromptSubmit={handlePromptSubmit}
-                  promptHistory={promptHistory}
-                  promptError={promptError}
-                  onStatusSelect={toggleStatusFilter}
-                  selectedStatus={dashboardFilter.status}
                 />
                 <ChartsPanel
                   metrics={metrics}

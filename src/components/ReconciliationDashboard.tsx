@@ -1,4 +1,4 @@
-import { useRef, useEffect, useState } from 'react';
+import { useState } from 'react';
 import type { ReconciliationRow, DashboardMetrics } from '../types';
 
 type ReconciliationDashboardProps = {
@@ -9,13 +9,6 @@ type ReconciliationDashboardProps = {
   totalPages: number;
   onPageChange: (page: number) => void;
   onReset: () => void;
-  prompt: string;
-  onPromptChange: (value: string) => void;
-  onPromptSubmit: () => void;
-  promptHistory: Array<{ prompt: string; summary: string; timestamp: string }>;
-  promptError: string;
-  onStatusSelect?: (status: 'reconciled' | 'unreconciled' | 'high-risk' | 'delayed') => void;
-  selectedStatus?: 'reconciled' | 'unreconciled' | 'high-risk' | 'delayed' | undefined;
 };
 
 function formatCurrency(value: number) {
@@ -39,23 +32,9 @@ export function ReconciliationDashboard({
   currentPage,
   totalPages,
   onPageChange,
-  onReset,
-  prompt,
-  onPromptChange,
-  onPromptSubmit,
-  promptHistory,
-  promptError,
-  onStatusSelect,
-  selectedStatus
+  onReset
 }: ReconciliationDashboardProps) {
-  const historyRef = useRef<HTMLDivElement | null>(null);
   const [selectedRowId, setSelectedRowId] = useState<string | null>(null);
-
-  useEffect(() => {
-    if (historyRef.current) {
-      historyRef.current.scrollTop = historyRef.current.scrollHeight;
-    }
-  }, [promptHistory]);
 
   const handleRowClick = (orderId: string) => {
     setSelectedRowId(selectedRowId === orderId ? null : orderId);
@@ -100,10 +79,7 @@ export function ReconciliationDashboard({
 
           {/* Status Summary */}
           <div className="status-summary">
-            <div
-              className={`status-item ${selectedStatus === 'reconciled' ? 'active' : ''}`}
-              onClick={() => onStatusSelect?.('reconciled')}
-            >
+            <div className="status-item">
               <div className="status-item__dot status-item__dot--reconciled"></div>
               <div className="status-item__info">
                 <div className="status-item__label">Reconciled</div>
@@ -111,10 +87,7 @@ export function ReconciliationDashboard({
               </div>
             </div>
 
-            <div
-              className={`status-item ${selectedStatus === 'unreconciled' ? 'active' : ''}`}
-              onClick={() => onStatusSelect?.('unreconciled')}
-            >
+            <div className="status-item">
               <div className="status-item__dot status-item__dot--unreconciled"></div>
               <div className="status-item__info">
                 <div className="status-item__label">Unreconciled</div>
@@ -122,10 +95,7 @@ export function ReconciliationDashboard({
               </div>
             </div>
 
-            <div
-              className={`status-item ${selectedStatus === 'delayed' ? 'active' : ''}`}
-              onClick={() => onStatusSelect?.('delayed')}
-            >
+            <div className="status-item">
               <div className="status-item__dot status-item__dot--delayed"></div>
               <div className="status-item__info">
                 <div className="status-item__label">Delayed</div>
@@ -133,10 +103,7 @@ export function ReconciliationDashboard({
               </div>
             </div>
 
-            <div
-              className={`status-item ${selectedStatus === 'high-risk' ? 'active' : ''}`}
-              onClick={() => onStatusSelect?.('high-risk')}
-            >
+            <div className="status-item">
               <div className="status-item__dot status-item__dot--high-risk"></div>
               <div className="status-item__info">
                 <div className="status-item__label">High-Risk</div>
@@ -239,128 +206,6 @@ export function ReconciliationDashboard({
           )}
         </div>
       </div>
-
-      {/* Agent Sidebar */}
-      <aside className="agent-sidebar">
-        <div className="agent-panel">
-          {/* Header */}
-          <div className="agent-panel__header">
-            <div className="agent-panel__header-content">
-              <div className="agent-panel__icon-wrapper">
-                <span className="agent-panel__icon">✨</span>
-              </div>
-              <div>
-                <h3 className="agent-panel__title">Query Agent</h3>
-                <p className="agent-panel__subtitle">Ask to filter & explore</p>
-              </div>
-            </div>
-          </div>
-
-          {/* Quick Suggestions - Show when no history */}
-          {promptHistory.length === 0 && (
-            <div className="agent-suggestions">
-              <div className="suggestions-label">Quick queries</div>
-              <div className="suggestions-grid">
-                <button
-                  className="suggestion-card"
-                  onClick={() => {
-                    onPromptChange('Show me high-risk cases');
-                    setTimeout(() => onPromptSubmit(), 0);
-                  }}
-                >
-                  <span className="suggestion-icon">⚠️</span>
-                  <span>High-risk cases</span>
-                </button>
-                <button
-                  className="suggestion-card"
-                  onClick={() => {
-                    onPromptChange('Show unreconciled transactions');
-                    setTimeout(() => onPromptSubmit(), 0);
-                  }}
-                >
-                  <span className="suggestion-icon">❌</span>
-                  <span>Unreconciled</span>
-                </button>
-                <button
-                  className="suggestion-card"
-                  onClick={() => {
-                    onPromptChange('Show me reconciled items');
-                    setTimeout(() => onPromptSubmit(), 0);
-                  }}
-                >
-                  <span className="suggestion-icon">✅</span>
-                  <span>Reconciled</span>
-                </button>
-                <button
-                  className="suggestion-card"
-                  onClick={() => {
-                    onPromptChange('Show UPI transactions');
-                    setTimeout(() => onPromptSubmit(), 0);
-                  }}
-                >
-                  <span className="suggestion-icon">📱</span>
-                  <span>UPI only</span>
-                </button>
-              </div>
-            </div>
-          )}
-
-          {/* Chat History */}
-          <div className="agent-history" ref={historyRef}>
-            {promptHistory.length > 0 ? (
-              promptHistory.map((entry, index) => (
-                <div key={`${entry.prompt}-${index}`} className="history-message">
-                  <div className="history-message__query">
-                    <span className="history-message__icon">💬</span>
-                    <span className="history-message__prompt">{entry.prompt}</span>
-                  </div>
-                  <div className="history-message__response">
-                    <span className="history-message__icon response">✓</span>
-                    <span className="history-message__result">{entry.summary}</span>
-                  </div>
-                  <span className="history-message__time">{entry.timestamp}</span>
-                </div>
-              ))
-            ) : (
-              <div className="history-empty">
-                <div className="history-empty__hint">Natural language search</div>
-              </div>
-            )}
-          </div>
-
-          {/* Input Section */}
-          <div className="agent-input-container">
-            <div className="agent-input-wrapper">
-              <textarea
-                className="agent-textarea"
-                placeholder="Ask anything... e.g., 'Show high-risk cases' or 'UPI transactions'"
-                value={prompt}
-                onChange={(event) => onPromptChange(event.target.value)}
-                onKeyDown={(event) => {
-                  if (event.key === 'Enter' && (event.metaKey || event.ctrlKey)) {
-                    event.preventDefault();
-                    onPromptSubmit();
-                  }
-                }}
-              />
-              <button
-                className="agent-send-btn"
-                onClick={onPromptSubmit}
-                disabled={!prompt.trim()}
-                title="Send (Cmd+Enter)"
-                aria-label="Send query"
-              >
-                <span className="send-icon">→</span>
-              </button>
-            </div>
-            {promptError ? (
-              <p className="agent-error">{promptError}</p>
-            ) : (
-              <span className="agent-hint"> Cmd + Enter to send</span>
-            )}
-          </div>
-        </div>
-      </aside>
     </div>
   );
 }
