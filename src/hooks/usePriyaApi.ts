@@ -1,5 +1,5 @@
 import { useCallback } from 'react';
-import type { Persona, RunInfo } from '../types';
+import type { Persona, QueryResult, RunInfo } from '../types';
 
 const API_BASE = (import.meta.env.VITE_API_BASE as string | undefined) || 'http://localhost:8000';
 
@@ -166,6 +166,20 @@ export function usePriyaApi() {
     }
   }, []);
 
+  // Standalone NL → SQL → Chart query (works without active agent session)
+  const chatQuery = useCallback(async (question: string, runId?: string): Promise<QueryResult> => {
+    const response = await fetch(`${API_BASE}/api/chat-query`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ question, run_id: runId }),
+    });
+    if (!response.ok) {
+      const err = await response.json().catch(() => ({ error: response.statusText }));
+      throw new Error(err.error || response.statusText);
+    }
+    return response.json();
+  }, []);
+
   // Upload CSV
   const uploadCsv = useCallback(async (csvFile: File): Promise<{ file_path: string; vendor_count: number }> => {
     try {
@@ -195,6 +209,7 @@ export function usePriyaApi() {
     approvePolicyGate,
     escalationDecision,
     submitQuery,
+    chatQuery,
     listRuns,
     getRun,
     exportAuditCsv,
