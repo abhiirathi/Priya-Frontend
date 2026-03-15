@@ -65,6 +65,7 @@ interface PriyaStore {
   addRawEvent: (event: WSEvent) => void;
   toggleLogsExpanded: () => void;
   setRunSummary: (summary: RunSummary | null) => void;
+  setPaymentAwaitingData: (data: PriyaStore['paymentAwaitingData']) => void;
   handleWSEvent: (event: WSEvent) => void;
   reset: () => void;
 }
@@ -149,6 +150,8 @@ export const usePriyaStore = create<PriyaStore>((set, get) => ({
 
   setRunSummary: (summary) => set({ runSummary: summary }),
 
+  setPaymentAwaitingData: (data) => set({ paymentAwaitingData: data }),
+
   handleWSEvent: (event) => {
 
     // Always log raw event
@@ -161,7 +164,16 @@ export const usePriyaStore = create<PriyaStore>((set, get) => ({
     switch (event.type) {
       case 'CANVAS_STATE': {
         const state = f('state');
-        if (state) set({ canvasState: state });
+        if (state) {
+          const updates: Partial<ReturnType<typeof get>> = { canvasState: state };
+          // When switching to audit, extract runSummary from the event payload
+          // so the recon dashboard renders immediately without waiting for RUN_SUMMARY
+          const summary = f('summary');
+          if (state === 'audit' && summary) {
+            updates.runSummary = summary as RunSummary;
+          }
+          set(updates);
+        }
         break;
       }
 
@@ -341,7 +353,7 @@ export const usePriyaStore = create<PriyaStore>((set, get) => ({
         set({ agentStatus: 'complete' });
         get().addChatMessage({
           timestamp: new Date(ts).toLocaleTimeString(),
-          text: 'Run completed successfully!',
+          text: 'Collection & disbursement complete! Reconciliation available.',
           level: 'info',
         });
         break;
@@ -359,7 +371,7 @@ export const usePriyaStore = create<PriyaStore>((set, get) => ({
         set({ agentStatus: 'running', policyGateData: null });
         get().addChatMessage({
           timestamp: new Date(ts).toLocaleTimeString(),
-          text: 'Payment plan approved! Executing...',
+          text: 'Approved! Collecting from owner & disbursing to vendors...',
           level: 'info',
         });
         break;

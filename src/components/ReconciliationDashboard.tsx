@@ -46,27 +46,49 @@ function mdrVarianceColor(drift: number): string {
   return '#22c55e';
 }
 
+// ─── Check Name Display Mapping ──────────────────────────────────────────────
+const CHECK_LABELS: Record<string, string> = {
+  settlement_amount_match: 'Settlement vs Collection',
+  bank_credit_match: 'Vendor Settlement Verified',
+  mdr_rate_drift: 'MDR Rate Drift',
+  settlement_delay: 'Settlement Timing',
+  refund_impact: 'Refund Deductions',
+  order_sum_check: 'Batch Total Match',
+  upi_zero_mdr: 'UPI Zero MDR',
+  duplicate_utr: 'Duplicate UTR',
+  invoice_vs_paid: 'Invoice vs Collected',
+  payout_to_vendor: 'Vendor Payout',
+};
+
+function checkLabel(name: string): string {
+  return CHECK_LABELS[name] ?? name;
+}
+
 // ─── Sample Data ─────────────────────────────────────────────────────────────
 const SAMPLE_CHECKS: ReconCheck[] = [
-  { check_id: 1, name: 'Amount Match', severity: 'blocking', passed: true, detail: 'Settled amount matches invoice amount' },
-  { check_id: 2, name: 'UTR Present', severity: 'blocking', passed: true, detail: 'UTR number received from bank' },
-  { check_id: 3, name: 'MDR Rate Valid', severity: 'warning', passed: true, detail: 'MDR within contracted band' },
-  { check_id: 4, name: 'Settlement On-Time', severity: 'info', passed: true, detail: 'Received within T+1' },
-  { check_id: 5, name: 'Deduction Accounted', severity: 'blocking', passed: true, detail: 'All platform deductions match' },
-  { check_id: 6, name: 'Refund Debit Verified', severity: 'warning', passed: true, detail: 'No pending refund debits' },
-  { check_id: 7, name: 'Order Count Match', severity: 'info', passed: true, detail: 'All orders in batch accounted' },
-  { check_id: 8, name: 'Bank Credit Confirmed', severity: 'blocking', passed: false, detail: 'Awaiting bank credit entry from merchant' },
+  { check_id: 1, name: 'settlement_amount_match', severity: 'blocking', passed: true, detail: 'Settled amount matches collection amount' },
+  { check_id: 2, name: 'bank_credit_match', severity: 'blocking', passed: true, detail: 'Settlement verified against bank statement' },
+  { check_id: 3, name: 'mdr_rate_drift', severity: 'warning', passed: true, detail: 'MDR within contracted band' },
+  { check_id: 4, name: 'settlement_delay', severity: 'info', passed: true, detail: 'Received within T+1' },
+  { check_id: 5, name: 'refund_impact', severity: 'blocking', passed: true, detail: 'All platform deductions match' },
+  { check_id: 6, name: 'order_sum_check', severity: 'warning', passed: true, detail: 'No pending refund debits' },
+  { check_id: 7, name: 'upi_zero_mdr', severity: 'info', passed: true, detail: 'All orders in batch accounted' },
+  { check_id: 8, name: 'duplicate_utr', severity: 'blocking', passed: false, detail: 'Awaiting bank credit entry from merchant' },
+  { check_id: 9, name: 'invoice_vs_paid', severity: 'blocking', passed: true, detail: 'Invoice amount matches collected amount' },
+  { check_id: 10, name: 'payout_to_vendor', severity: 'blocking', passed: true, detail: 'Vendor payout disbursed successfully' },
 ];
 
 const MISMATCH_CHECKS: ReconCheck[] = [
-  { check_id: 1, name: 'Amount Match', severity: 'blocking', passed: false, detail: 'Delta of Rs 450 detected — bank credited less than expected' },
-  { check_id: 2, name: 'UTR Present', severity: 'blocking', passed: true, detail: 'UTR number received from bank' },
-  { check_id: 3, name: 'MDR Rate Valid', severity: 'warning', passed: false, detail: 'MDR 2.1% vs contracted 1.8% — variance 0.3%' },
-  { check_id: 4, name: 'Settlement On-Time', severity: 'info', passed: false, detail: 'Received T+3, expected T+1 — 2 days late' },
-  { check_id: 5, name: 'Deduction Accounted', severity: 'blocking', passed: true, detail: 'All platform deductions match' },
-  { check_id: 6, name: 'Refund Debit Verified', severity: 'warning', passed: true, detail: 'No pending refund debits' },
-  { check_id: 7, name: 'Order Count Match', severity: 'info', passed: true, detail: 'All orders in batch accounted' },
-  { check_id: 8, name: 'Bank Credit Confirmed', severity: 'blocking', passed: true, detail: 'Bank credit of Rs 1,24,550 confirmed' },
+  { check_id: 1, name: 'settlement_amount_match', severity: 'blocking', passed: false, detail: 'Delta of Rs 450 detected — bank credited less than expected' },
+  { check_id: 2, name: 'bank_credit_match', severity: 'blocking', passed: true, detail: 'Settlement verified against bank statement' },
+  { check_id: 3, name: 'mdr_rate_drift', severity: 'warning', passed: false, detail: 'MDR 2.1% vs contracted 1.8% — variance 0.3%' },
+  { check_id: 4, name: 'settlement_delay', severity: 'info', passed: false, detail: 'Received T+3, expected T+1 — 2 days late' },
+  { check_id: 5, name: 'refund_impact', severity: 'blocking', passed: true, detail: 'All platform deductions match' },
+  { check_id: 6, name: 'order_sum_check', severity: 'warning', passed: true, detail: 'No pending refund debits' },
+  { check_id: 7, name: 'upi_zero_mdr', severity: 'info', passed: true, detail: 'All orders in batch accounted' },
+  { check_id: 8, name: 'duplicate_utr', severity: 'blocking', passed: true, detail: 'Bank credit of Rs 1,24,550 confirmed' },
+  { check_id: 9, name: 'invoice_vs_paid', severity: 'blocking', passed: false, detail: 'Invoice amount does not match collected amount' },
+  { check_id: 10, name: 'payout_to_vendor', severity: 'blocking', passed: false, detail: 'Vendor payout not confirmed — awaiting disbursement' },
 ];
 
 const SAMPLE_DATA: ReconRow[] = [
@@ -124,7 +146,7 @@ const SAMPLE_DATA: ReconRow[] = [
     recon_status: 'WARNING',
     checks: [
       ...SAMPLE_CHECKS.slice(0, 2).map(c => ({ ...c, passed: true })),
-      { check_id: 3, name: 'MDR Rate Valid', severity: 'warning' as const, passed: false, detail: 'MDR 1.95% vs contracted 1.80% — variance 0.15%' },
+      { check_id: 3, name: 'mdr_rate_drift', severity: 'warning' as const, passed: false, detail: 'MDR 1.95% vs contracted 1.80% — variance 0.15%' },
       ...SAMPLE_CHECKS.slice(3).map(c => ({ ...c, passed: true })),
     ],
     settlement_delay_days: 1, settled_at: '2026-03-14T09:45:00Z', created_at: '2026-03-13T10:00:00Z',
@@ -214,7 +236,8 @@ export function ReconciliationDashboard({ runId, data, mode = 'run' }: Reconcili
   const [bankCreditSaved, setBankCreditSaved] = useState(false);
   const [drawerOrdersExpanded, setDrawerOrdersExpanded] = useState(false);
 
-  // Load data
+  // Load data — retry once after 1.5s if first fetch returns empty
+  // (handles race between DB write and canvas state event)
   useEffect(() => {
     if (data && data.length > 0) {
       setRows(data);
@@ -222,13 +245,19 @@ export function ReconciliationDashboard({ runId, data, mode = 'run' }: Reconcili
       return;
     }
     if (runId) {
-      fetchRunData(runId);
+      fetchRunData(runId).then(() => {
+        // If no rows came back, retry once after a short delay
+        setTimeout(() => {
+          setRows(prev => {
+            if (prev.length === 0) fetchRunData(runId);
+            return prev;
+          });
+        }, 1500);
+      });
     } else if (!mode || mode === 'run') {
-      // No runId and no data — show empty, not dummy data
       setRows([]);
       setLastSynced(new Date());
     } else {
-      // Live mode without runId — show sample as placeholder
       setRows(SAMPLE_DATA);
       setLastSynced(new Date());
     }
@@ -533,7 +562,7 @@ export function ReconciliationDashboard({ runId, data, mode = 'run' }: Reconcili
       {/* ── Scorecard ─────────────────────────────────────────────────────────── */}
       <div style={S.scoreRow}>
         <div style={S.scoreTile('#a78bfa', false)} onClick={() => handleTileClick('total')}>
-          <div style={S.tileLabel}>Total Settlements</div>
+          <div style={S.tileLabel}>Total Vendors Reconciled</div>
           <div style={S.tileValue('#a78bfa')}>{scorecard.total_settlements}</div>
           <div style={S.tileSub}>{mode === 'run' && runId ? `Run: ${runId.slice(0, 12)}…` : 'All UTRs'}</div>
         </div>
@@ -546,7 +575,7 @@ export function ReconciliationDashboard({ runId, data, mode = 'run' }: Reconcili
 
         <div style={{ ...S.scoreTile(matchRateColor, activeTileFilter === 'match_rate'), background: activeTileFilter === 'match_rate' ? matchRateBg : '#111318' }}
           onClick={() => handleTileClick('match_rate')}>
-          <div style={S.tileLabel}>Match Rate</div>
+          <div style={S.tileLabel}>Recon Match Rate</div>
           <div style={{ ...S.tileValue(matchRateColor), display: 'flex', alignItems: 'baseline', gap: '4px' }}>
             {scorecard.match_rate}
             <span style={{ fontSize: '14px' }}>%</span>
@@ -603,10 +632,10 @@ export function ReconciliationDashboard({ runId, data, mode = 'run' }: Reconcili
                 {[
                   ['utr_number', 'UTR Number'],
                   ['settled_at', 'Settlement Date'],
-                  ['invoice_amount', 'Expected Amt'],
-                  ['settled_amount', 'Settled Amt'],
+                  ['invoice_amount', 'Invoice Amount'],
+                  ['settled_amount', 'Net Settled'],
                   ['platform_fee', 'Deductions'],
-                  ['bank_credit_amount', 'Bank Credit'],
+                  ['bank_credit_amount', 'Verified Amt'],
                   ['bank_delta', 'Delta'],
                   ['recon_status', 'Status'],
                   ['settlement_delay_days', 'Delay'],
@@ -767,9 +796,9 @@ function DrawerContent({
           ['UTR Number', row.utr_number || '—'],
           ['Rail Used', row.rail_used],
           ['Invoice Amount', fmtINR(row.invoice_amount)],
-          ['Paid Amount', fmtINR(row.paid_amount)],
+          ['Collected', fmtINR(row.paid_amount)],
           ['Platform Fee', fmtINR(row.platform_fee)],
-          ['Settled Amount', fmtINR(row.settled_amount)],
+          ['Net Settled', fmtINR(row.settled_amount)],
           ['Settlement Date', fmtDate(row.settled_at)],
           ['Delay', `T+${row.settlement_delay_days}`],
           ['Retries', String(row.retries)],
@@ -783,17 +812,21 @@ function DrawerContent({
         ))}
       </div>
 
-      {/* Bank Credit Entry */}
+      {/* Settlement Verification */}
       <div style={sSection}>
-        <div style={sSectionTitle}>Bank Credit Verification</div>
+        <div style={sSectionTitle}>Vendor Settlement Verification</div>
         <div style={{ fontSize: '12px', color: 'rgba(255,255,255,0.4)', marginBottom: '10px' }}>
-          Enter the amount credited in your bank statement for this UTR.
+          Verify the amount credited to the vendor's bank for this UTR. Auto-filled from settlement data — override if bank statement differs.
         </div>
         <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
           <input
             type="number"
+            min="0"
             value={bankCreditInput}
-            onChange={e => setBankCreditInput(e.target.value)}
+            onChange={e => {
+              const v = e.target.value;
+              if (v === '' || parseFloat(v) >= 0) setBankCreditInput(v);
+            }}
             placeholder={row.settled_amount.toString()}
             style={{
               flex: 1, background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.15)',
@@ -822,7 +855,7 @@ function DrawerContent({
             background: computedDelta === 0 ? 'rgba(34,197,94,0.1)' : 'rgba(239,68,68,0.1)',
             display: 'flex', justifyContent: 'space-between', alignItems: 'center',
           }}>
-            <span style={{ fontSize: '12px', color: 'rgba(255,255,255,0.5)' }}>Delta (Bank Credit − Settled)</span>
+            <span style={{ fontSize: '12px', color: 'rgba(255,255,255,0.5)' }}>Delta (Verified − Settled)</span>
             <span style={{
               fontWeight: 700, fontSize: '14px',
               color: computedDelta === 0 ? '#22c55e' : '#ef4444',
@@ -833,9 +866,9 @@ function DrawerContent({
         )}
       </div>
 
-      {/* Reconciliation Checks Checklist */}
+      {/* Two-Leg Reconciliation Checks Checklist */}
       <div style={sSection}>
-        <div style={sSectionTitle}>Reconciliation Checks ({row.checks.filter(c => c.passed).length}/{row.checks.length} passed)</div>
+        <div style={sSectionTitle}>Two-Leg Reconciliation Checks ({row.checks.filter(c => c.passed).length}/{row.checks.length} passed)</div>
         <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
           {row.checks.map(check => (
             <CheckItem key={check.check_id} check={check} />
@@ -970,7 +1003,7 @@ function CheckItem({ check }: { check: ReconCheck }) {
       <span style={{ fontWeight: 700, color: iconColor, fontSize: '13px', minWidth: '16px', marginTop: '1px' }}>{icon}</span>
       <div>
         <div style={{ fontSize: '12px', fontWeight: 600, color: 'rgba(255,255,255,0.8)', marginBottom: '2px' }}>
-          {check.name}
+          {checkLabel(check.name)}
           {!check.passed && (
             <span style={{
               marginLeft: '6px', fontSize: '10px', padding: '1px 5px', borderRadius: '3px',
